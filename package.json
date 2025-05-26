@@ -5,10 +5,20 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon ./src/index.js"
-    "test": "jest",
-    "build": "tsc"
   },
   "dependencies": {
     "express": "^5.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jobayer98/ci_cd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Jobayer98/ci_cd/issues"
+  },
+  "homepage": "https://github.com/Jobayer98/ci_cd#readme"
 }
