@@ -1,0 +1,124 @@
+# .github/workflows/ci-cd.yml
+name: Node.js CI/CD Pipeline
+
+# When should this workflow run?
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# What jobs should run?
+jobs:
+  # Job 1: Test the code (CI part)
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      # Step 1: Get the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Run linting (code quality check)
+      - name: Run ESLint
+        run: npm run lint
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: npm test
+
+      # Step 6: Check test coverage
+      - name: Generate coverage report
+        run: npm run test:coverage
+
+      # Step 7: Upload coverage to external service (optional)
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+
+  # Job 2: Build the application
+  build:
+    needs: test # Only run if tests pass
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      # Save build artifacts for deployment
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+  # Job 3: Deploy to staging (CD part)
+  deploy-staging:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+      - name: Deploy to staging server
+        run: |
+          echo "Deploying to staging..."
+          # Add your staging deployment commands here
+          # Example: rsync, ssh, docker commands, etc.
+
+  # Job 4: Deploy to production (CD part)
+  deploy-production:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production # Requires manual approval
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+      - name: Deploy to production server
+        run: |
+          echo "Deploying to production..."
+          # Add your production deployment commands here
+
+      - name: Notify team
+        run: |
+          echo "Production deployment completed!"
+          # Add notification logic (Slack, email, etc.)
