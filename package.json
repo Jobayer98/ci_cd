@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon ./src/index.js"
+    "test": "jest",
+    "build": "tsc"
   },
   "dependencies": {
     "express": "^5.1.0"
